@@ -46,10 +46,8 @@ class FCNDatsetReader(object):
              for filename in self.filelist])
         for label in self.labels: # temporal code, must be changed to be universal
             label[label == 255] = 1
-        print('Constructed image shape:')
-        print(self.images.shape)
-        print('Constructed label shape:')
-        print(self.labels.shape)
+        print('Constructed image shape:' + self.images.shape)
+        print('Constructed label shape:' + self.labels.shape)
 
     def __transform(self, filename, multi_channels):
         image = misc.imread(filename)
@@ -82,7 +80,7 @@ class FCNDatsetReader(object):
         if self.batch_offset > self.images.shape[0]:
             # Finished epoch
             self.epochs_completed += 1
-            print("**************** Epochs completed: %d ****************" % self.epochs_completed)
+            print("*** Epochs completed: %d ***" % self.epochs_completed)
             # Shuffle the data
             perm = np.arange(self.images.shape[0])
             np.random.shuffle(perm)

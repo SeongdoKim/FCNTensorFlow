@@ -27,9 +27,8 @@ def main(_):
     """
     Main entry for FCN training
     """
-
     # variables
-    num_classes = 2
+    num_classes = FLAGS.classes
     keep_prob = tf.placeholder(tf.float32, name="keep_prob")
     image = tf.placeholder(tf.float32, shape=[None, 240, 320, 3], name="input_image")
     labels = tf.placeholder(tf.int32, shape=[None, 240, 320, 1], name="annotation")
@@ -63,8 +62,7 @@ def main(_):
     summary_op = tf.summary.merge_all()
 
     # Read dataset
-    reader = Reader.FCNDatsetReader(
-        data_parser.read_dataset("../dataset/cmu_corridor_dataset", "png"))
+    reader = Reader.FCNDatsetReader(data_parser.read_dataset(FLAGS.data_dir, FLAGS.data_ext))
     print("%d images and labels are in the dataset" % len(reader.filelist))
 
     # Add ops to save and restore all the variables.
@@ -79,14 +77,18 @@ def main(_):
         train_writer = tf.summary.FileWriter(graph_location)
         train_writer.add_graph(tf.get_default_graph())
         if FLAGS.train:
-            for i in range(10000):
-                train_images, train_annotations = reader.next_batch(8)
-                feed_dict = {image: train_images, labels: train_annotations, keep_prob: 0.5}
+            for step in range(FLAGS.max_iter):
+                train_images, train_annotations = reader.next_batch(FLAGS.batch_size)
+                feed_dict = {image: train_images,
+                             labels: train_annotations,
+                             keep_prob: FLAGS.keep_prob}
                 sess.run(train_op, feed_dict=feed_dict)
-                if i % 100 == 0: # print accuracy for every 100 iteration
+                if step % 100 == 0: # print accuracy for every 100 iteration
                     train_loss, summary_str = sess.run([loss, summary_op], feed_dict=feed_dict)
-                    print('Step %d, train loss:%g' % (i, train_loss))
-                    train_writer.add_summary(summary_str, i)
+                    print('Step %d, train loss:%g' % (step, train_loss))
+                    train_writer.add_summary(summary_str, step)
+                if step % 5000 == 0: # save model for every 10000 iteration
+                    saver.save(sess, FLAGS.output, global_step=step)
         else:
             valid_images, valid_annotations = reader.get_random_batch(2)
             #valid_images = [scipy.misc.imresize(scipy.misc.imread("./tabby_cat.png"),
@@ -97,7 +99,7 @@ def main(_):
             scipy.misc.imsave('inference.png', color_image)
             scipy.misc.imsave('original.png', valid_images[0])
         # Save the trained variables to disk.
-        save_path = saver.save(sess, "./output/model.ckpt")
+        save_path = saver.save(sess, FLAGS.output)
         print("Model saved in file: %s" % save_path)
 
 if __name__ == "__main__":
@@ -105,8 +107,25 @@ if __name__ == "__main__":
     PARSER.add_argument('--data_dir', type=str,
                         default='../dataset/cmu_corridor_dataset',
                         help='Directory of input dataset')
+    PARSER.add_argument('--data_ext', type=str,
+                        default='png',
+                        help='File extension of image data')
+    PARSER.add_argument('--classes', type=int,
+                        default=2,
+                        help='The number of classes')
+    PARSER.add_argument('--output', type=str,
+                        default='./output/model',
+                        help='Full path including prefix of output file')
+    PARSER.add_argument('--max_iter', type=int,
+                        default=10000,
+                        help='Maximum iteration of training')
+    PARSER.add_argument('--batch_size', type=int,
+                        default=8,
+                        help='Training batch size')
     PARSER.add_argument('--learning_rate', type=float,
                         default=1e-6, help='Initial learning rate')
+    PARSER.add_argument('--keep_prob', type=float,
+                        default=0.5, help='Dropout probability')
     PARSER.add_argument('--train', type=bool,
                         default=False, help='Training/Evaluation')
     PARSER.add_argument('--debug', type=bool,
