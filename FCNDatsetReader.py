@@ -46,8 +46,8 @@ class FCNDatsetReader(object):
              for filename in self.filelist])
         for label in self.labels: # temporal code, must be changed to be universal
             label[label == 255] = 1
-        print('Constructed image shape:' + self.images.shape)
-        print('Constructed label shape:' + self.labels.shape)
+        print('Constructed image shape:', self.images.shape)
+        print('Constructed label shape:', self.labels.shape)
 
     def __transform(self, filename, multi_channels):
         image = misc.imread(filename)

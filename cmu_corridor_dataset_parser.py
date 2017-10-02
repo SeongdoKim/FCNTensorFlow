@@ -7,9 +7,8 @@ def read_dataset(data_dir, ext):
     The folder structure must be remained the same, or modify the
     code as you like.
     """
-    imagelist = glob.glob(os.path.join(data_dir, "raw_image/*." + ext))
-    labellist = glob.glob(os.path.join(data_dir, "ground_truth/*_gt_bw." + ext))
-
+    imagelist = sorted(glob.glob(os.path.join(data_dir, "raw_image/*." + ext)))
+    labellist = sorted(glob.glob(os.path.join(data_dir, "ground_truth/*_gt_bw." + ext)))
     pairlist = []
     for image, label in zip(imagelist, labellist):
         pair = {
