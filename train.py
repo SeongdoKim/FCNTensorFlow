@@ -30,6 +30,10 @@ def main(_):
     # variables
     num_classes = FLAGS.classes
     keep_prob = tf.placeholder(tf.float32, name="keep_prob")
+    # Since I fixed input image size to be [240, 320], arbitrary image size will not work for inference.
+    # Change it to [None, None], and train it again.
+    # Note that even if I use arbitrary size of input, I should keep the same input size for entire
+    # training image to avoid possible problem.
     image = tf.placeholder(tf.float32, shape=[None, 240, 320, 3], name="input_image")
     labels = tf.placeholder(tf.int32, shape=[None, 240, 320, 1], name="annotation")
 
